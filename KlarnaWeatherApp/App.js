@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { FlatList, StyleSheet, Text, View } from 'react-native';
+import { FlatList, StyleSheet, Text, View, Dimensions } from 'react-native';
 
 const weatherData = [
   { id: '1', name: 'Stockholm', temp: '10' },
@@ -7,6 +7,12 @@ const weatherData = [
   { id: '3', name: 'New York', temp: '15' },
   { id: '4', name: 'Tokyo', temp: '20' },
   { id: '5', name: 'Sydney', temp: '25' },
+  { id: '6', name: 'Moscow', temp: '0' },
+  { id: '7', name: 'Cape Town', temp: '30' },
+  { id: '8', name: 'Rio de Janeiro', temp: '35' },
+  { id: '9', name: 'Cairo', temp: '40' },
+  { id: '10', name: 'Beijing', temp: '45' },
+
 ]
 
 const colors = {
@@ -15,7 +21,7 @@ const colors = {
   cold: '#00BFFF',
 
   black: '#000000',
-  white: '#FFFFFF',
+  white: '#FFFFFF', 
 
 }
 
@@ -24,12 +30,14 @@ export default function App() {
     <View style={styles.container}>
       <FlatList
         data={weatherData}
+        keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
           <View style={styles.item}>
             <Text style={styles.name}>{item.name}</Text>
             <Text style={styles.temp}>{item.temp}°C</Text>
           </View>
         )}
+        contentContainerStyle={{ padding: 20 }}
       />
     </View>
   );
@@ -44,10 +52,20 @@ const styles = StyleSheet.create({
   },
   item: {
     backgroundColor: colors.white,
-    borderColor: colors.black,
-    borderWidth: 1,
-    padding: 100,
+    width: Dimensions.get('window').width/1.2,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
     marginVertical: 8,
-    marginHorizontal: 16,
+    padding: 20,
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+    
+    elevation: 5,
   },
 });
