@@ -1,10 +1,9 @@
-import React from 'react'
-import { FlatList, StyleSheet, Text, View, Dimensions, Animated, TouchableOpacity } from 'react-native'
+import React, { useState } from 'react'
+import { FlatList, StyleSheet, Text, View, Dimensions, TouchableOpacity } from 'react-native'
 
 import Modal from 'react-native-modal'
 
 const weatherData = [
-
 	{ id: '1', name: 'Stockholm', temp: '10' },
 
 	{ id: '2', name: 'London', temp: '5' },
@@ -24,9 +23,6 @@ const weatherData = [
 	{ id: '9', name: 'Cairo', temp: '40' },
 
 	{ id: '10', name: 'Beijing', temp: '45' },
-
-
-
 ]
 
 const colors = {
@@ -36,7 +32,6 @@ const colors = {
 
 	black: '#000000',
 	white: '#FFFFFF', 
-
 }
 
 
@@ -53,28 +48,56 @@ const calculateTempColor = (temp) => {
 
 
 
-export default function App() {
 
+export default function App() {
+	const [isModalVisible, setModalVisible] = useState(false)
+	const [modalContentData, setModalContentData] = useState({})
+	const toggleModal = () => {
+		setModalVisible(!isModalVisible)
+	}
+	const ModalContent = () => {
+		return (
+			<View style={styles.modalContent}>
+				<Text style={styles.modalText}>{modalContentData.name}</Text>
+			</View>
+		)
+	}
 	return (
 
 		<View style={styles.container}>
-			<Modal isVisible={true}>
-				<FlatList
-					data={weatherData}
-					keyExtractor={(item) => item.id}
-					renderItem={({ item }) => ( 
-						<Animated.View style={[styles.item, { borderWidth:1, borderColor: calculateTempColor(item.temp)}]}>
-							<TouchableOpacity
-								onPress={(e) => console.log(e.nativeEvent)}
-							> 
-								<Text style={styles.name}>{item.name}</Text>
-								<Text style={styles.temp}>{item.temp}°C</Text>
-							</TouchableOpacity>
-						</Animated.View>
-					)}
-					contentContainerStyle={{ padding: 20 }}
-					showsVerticalScrollIndicator={false}
-				/>
+			
+			<FlatList
+				data={weatherData}
+				keyExtractor={( item ) => item.id}
+				renderItem={({ item }) => ( 
+					<View style={[styles.item, { borderWidth:1, borderColor: calculateTempColor(item.temp)}]}>
+						<TouchableOpacity
+							onPress={() => {
+								setModalContentData(item)
+								toggleModal()
+							}}
+						> 
+							<Text style={styles.name}>{item.name}</Text>
+							<Text style={styles.temp}>{item.temp}°C</Text>
+						</TouchableOpacity>
+					</View>
+				)}
+				contentContainerStyle={{ padding: 20 }}
+				showsVerticalScrollIndicator={false}
+			/>
+			<Modal
+				isVisible={isModalVisible}
+				useNativeDriver
+				animationIn="zoomInDown"
+				animationOut="zoomOutUp"
+				animationInTiming={600}
+				animationOutTiming={600}
+				style={styles.modal}
+				onBackdropPress={toggleModal}
+				onSwipeComplete={toggleModal}
+				swipeDirection={['down', 'left', 'right', 'up']}
+			>
+				<ModalContent content={modalContentData} />
 			</Modal>
 		</View>
 	)
@@ -106,6 +129,30 @@ const styles = StyleSheet.create({
 		shadowOpacity: 0.25,
 		shadowRadius: 3.84,
 		elevation: 5
+	},
+	name: {
+		fontSize: 20,
+		fontWeight: 'bold',
+		color: colors.black,
+	},
+	temp: {
+		fontSize: 16,
+		textAlign: 'center',
+	},
+	modal: {
+		flex: 1,
+		alignItems: 'center',
+		justifyContent: 'flex-end',
+		margin: 0,
+		width: Dimensions.get('window').width,
+	},
+	modalContent: {
+		alignItems: 'center',
+		backgroundColor: 'white',
+		borderRadius: 4,
+		width: Dimensions.get('window').width,
+		height: Dimensions.get('window').height/2,
+		padding: 22,
 	},
 })
 
