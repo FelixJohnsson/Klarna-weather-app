@@ -1,59 +1,51 @@
 import React, { useState } from 'react'
-import { FlatList, StyleSheet, Text, View, Dimensions, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native'
+import { FlatList, StyleSheet, Text, View, Dimensions, TextInput, ActivityIndicator, Pressable } from 'react-native'
 
 import Modal from 'react-native-modal'
 import { colors } from './Colors'
 import getData from './data'
-
-const weatherData = [
-	{ id: '1', name: 'Stockholm', temp: '10' },
-
-	{ id: '2', name: 'London', temp: '5' },
-
-	{ id: '3', name: 'New York', temp: '15' },
-
-	{ id: '4', name: 'Tokyo', temp: '20' },
-
-	{ id: '5', name: 'Sydney', temp: '25' },
-
-	{ id: '6', name: 'Moscow', temp: '0' },
-
-	{ id: '7', name: 'Cape Town', temp: '30' },
-
-	{ id: '8', name: 'Rio de Janeiro', temp: '35' },
-
-	{ id: '9', name: 'Cairo', temp: '40' },
-
-	{ id: '10', name: 'Beijing', temp: '45' },
-]
-
-/*const calculateTempColor = (temp) => {
-	if (temp > 30) {
-		return colors.hot
-	} else if (temp > 15) {
-		return colors.warm
-	} else {
-		return colors.cold
-	}
-}*/
 
 export default function App() {
 	const [isModalVisible, setModalVisible] = useState(false)
 	const [modalContentData, setModalContentData] = useState({})
 	const [searchText, setSearchText] = useState('')
 	const [isLoading, setLoading] = useState(false)
+	const [data, setData] = useState([])
+
+	const handleCachedLocations = (newLocationData) => {
+		setData([...data, newLocationData])
+	}
 
 	const handleSearch = (location) => {
+		const found = data.filter(item => item.address === location)
+		if (found.length > 0){
+			const {currentConditions, address, description} = found[0]
+			setModalContentData({currentConditions, address, description})
+			toggleModal()
+			setLoading(false)
+			return found[0]
+		}
 		getData(location)
 			.then(({ currentConditions, address, description }) => {
 				setModalContentData({currentConditions, address, description})
-				setModalVisible(true)
+				handleCachedLocations({currentConditions, address, description})
+				toggleModal()
 				setLoading(false)
+				setSearchText('')
 			})
 			.catch((error) => {
-				console.log(error)
+				setSearchText(error.message)
+				setTimeout(() => {
+					setSearchText('')
+				}, 1000)
 				setLoading(false)
 			})
+	}
+
+	const handleRemove = (location) => {
+		const newData = data.filter(item => item.address !== location)
+		setData(newData)
+		toggleModal()
 	}
 
 	const toggleModal = () => {
@@ -74,9 +66,32 @@ export default function App() {
 				<Text style={styles.modalContent.sunset}>Sunset at {modalContentData.currentConditions.sunset}</Text>
 
 				<Text style={styles.modalContent.description}> {modalContentData.description}</Text>
+
+				<Pressable
+					onPress={() => {
+						handleRemove(modalContentData.address)
+					}}
+				>
+					<Text style={styles.modalContent.remove}>
+            Remove
+					</Text>
+				</Pressable>
 			</View>
 		)
 	}
+
+	const WeatherCard = (item) => {
+		const { data } = item
+		return (
+			<View style={styles.card.view}>
+				<Text style={styles.card.title}>{data.address}</Text>
+				<Text style={styles.card.temp}>{data.currentConditions.temp}C</Text>
+				<Text style={styles.card.text}>{data.currentConditions.conditions}</Text>
+			</View>
+		)
+    
+	}
+
 	return (
 
 		<View style={styles.container}>
@@ -93,19 +108,18 @@ export default function App() {
 			/>
 			{ isLoading && <ActivityIndicator size="large" color="#0000ff" /> }
 			<FlatList
-				data={[ ...weatherData]}
-				keyExtractor={( item ) => item.id}
+				data={data}
+				keyExtractor={( item ) => item.address}
 				renderItem={({ item }) => ( 
 					<View style={[styles.item]}>
-						<TouchableOpacity
+						<Pressable
 							onPress={() => {
 								setLoading(true)
-								handleSearch(item.name) 
+								handleSearch(item.address)
 							}}
 						> 
-							<Text style={styles.name}>{item.name}</Text>
-							<Text style={styles.temp}>{item.temp}°C</Text>
-						</TouchableOpacity>
+							<WeatherCard data={item}/>
+						</Pressable>
 					</View>
 				)}
 				contentContainerStyle={{ padding: 20 }}
@@ -139,31 +153,32 @@ const styles = StyleSheet.create({
 		justifyContent: 'center',
 	},
 
-	item: {
-		backgroundColor: colors.white,
-		width: Dimensions.get('window').width/1.2,
-		borderRadius: 20,
-		alignItems: 'center',
-		justifyContent: 'center',
-		marginVertical: 8,
-		padding: 20,
-		shadowColor: '#000',
-		shadowOffset: {
-			width: 0,
-			height: 2,
+	card: {
+		view: {
+			backgroundColor: colors.white,
+			width: Dimensions.get('window').width/1.2,
+			borderRadius: 20,
+			alignItems: 'center',
+			justifyContent: 'center',
+			marginVertical: 8,
+			padding: 20,
+			shadowColor: '#000',
+			shadowOffset: {
+				width: 0,
+				height: 2,
+			},
+			shadowOpacity: 0.25,
+			shadowRadius: 3.84,
+			elevation: 5,
 		},
-		shadowOpacity: 0.25,
-		shadowRadius: 3.84,
-		elevation: 5
-	},
-	name: {
-		fontSize: 20,
-		fontWeight: 'bold',
-		color: colors.black,
-	},
-	temp: {
-		fontSize: 16,
-		textAlign: 'center',
+		title: {
+			fontSize: 20,
+			fontWeight: 'bold',
+		},
+		text: {
+			fontSize: 16,
+			textAlign: 'center',
+		},
 	},
 	input: {
 		height: 40,
@@ -212,6 +227,12 @@ const styles = StyleSheet.create({
 			textAlign: 'center',
 			borderTopColor: colors.black,
 			borderTopWidth: 1,
+		},
+		remove: {
+			paddingTop: 20,
+			fontSize: 12,
+			textAlign: 'center',
+			color: colors.red,
 		}
 	},
 })

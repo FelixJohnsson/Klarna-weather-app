@@ -1,17 +1,16 @@
-const searchedLocations = []
-
-export default async function getData(location){
-	const found = searchedLocations.filter(item => item.address === location)
-	if (found.length > 0) return found[0]
+const getData = async (location) => {
 	return fetch(`https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${location}?unitGroup=metric&key=46EWUPFNKY965SXNMTJUUXWQV&contentType=json`)
-		.then((response) => response.json())
+		.then((response) => {
+			if(response.ok)
+				return response.json()
+			else throw new Error('Location not found ...')
+		})
 		.then((json) => {
-			console.log(json)
-			searchedLocations.push(json)
 			return json
 		})
 		.catch((error) => {
-			console.error(error)
-			return error
+			throw error
 		})
 }
+
+export default getData

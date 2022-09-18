@@ -4,6 +4,7 @@ export const colors = {
 	cold: '#00BFFF',
 
 	black: '#000000',
-	white: '#FFFFFF', 
+	white: '#FFFFFF',
+	red: '#FF0000', 
 }
     
