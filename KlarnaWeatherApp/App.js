@@ -13,9 +13,8 @@ export default function App() {
 	const [isLoading, setLoading] = useState(false)
 	const [data, setData] = useState([])
 
-	const handleCachedLocations = (newLocationData) => {
-		setData([...data, newLocationData])
-	}
+	const toggleModal = () => setModalVisible(!isModalVisible)
+	const handleCachedLocations = (newLocationData) => setData([...data, newLocationData])
 
 	const handleSearch = (location) => {
 		const found = data.filter(item => item.address === location)
@@ -28,6 +27,7 @@ export default function App() {
 		}
 		getData(location)
 			.then(({ currentConditions, address, description }) => {
+				// SHORTEN THIS
 				setModalContentData({currentConditions, address, description})
 				handleCachedLocations({currentConditions, address, description})
 				toggleModal()
@@ -49,10 +49,6 @@ export default function App() {
 		toggleModal()
 	}
 
-	const toggleModal = () => {
-		setModalVisible(!isModalVisible)
-	}
-
 	const ModalContent = () => {
 		return (
 			<View style={styles.modalContent.view}>
@@ -67,7 +63,6 @@ export default function App() {
 				<Text style={styles.modalContent.sunset}>Sunset at {modalContentData.currentConditions.sunset}</Text>
 
 				<Text style={styles.modalContent.description}> {modalContentData.description}</Text>
-
 				<Pressable
 					onPress={() => {
 						handleRemove(modalContentData.address)
@@ -84,17 +79,24 @@ export default function App() {
 	const WeatherCard = (item) => {
 		const { data } = item
 		return (
-			<View style={styles.card.view}>
-				<Text style={styles.card.title}>{data.address}</Text>
-				<Text style={styles.card.temp}>{data.currentConditions.temp}C</Text>
-				<Text style={styles.card.text}>{data.currentConditions.conditions}</Text>
+			<View style={[styles.item]}>
+				<Pressable
+					onPress={() => {
+						setLoading(true)
+						handleSearch(item.address)
+					}}
+				> 
+					<View style={styles.card.view}>
+						<Text style={styles.card.title}>{data.address}</Text>
+						<Text style={styles.card.temp}>{data.currentConditions.temp}C</Text>
+						<Text style={styles.card.text}>{data.currentConditions.conditions}</Text>
+					</View>
+				</Pressable>
 			</View>
 		)
-    
 	}
 
 	return (
-
 		<View style={styles.container}>
 			<TextInput
 				style={styles.input}
@@ -108,24 +110,15 @@ export default function App() {
 				}}
 			/>
 			{ isLoading && <ActivityIndicator size="large" color="#0000ff" /> }
+
 			<FlatList
 				data={data}
 				keyExtractor={( item ) => item.address}
-				renderItem={({ item }) => ( 
-					<View style={[styles.item]}>
-						<Pressable
-							onPress={() => {
-								setLoading(true)
-								handleSearch(item.address)
-							}}
-						> 
-							<WeatherCard data={item}/>
-						</Pressable>
-					</View>
-				)}
+				renderItem={({ item }) => <WeatherCard data={item} />}
 				contentContainerStyle={{ padding: 20 }}
 				showsVerticalScrollIndicator={false}
 			/>
+
 			<Modal
 				isVisible={isModalVisible}
 				useNativeDriver
