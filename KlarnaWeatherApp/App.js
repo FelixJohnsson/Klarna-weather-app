@@ -105,6 +105,9 @@ export default function App() {
 
 	return (
 		<View style={styles.container}>
+			<Text style={{fontSize: 20, fontWeight: 'bold', marginTop: 40}}>
+        Weather App
+			</Text>
 			<TextInput
 				style={styles.input}
 				onChangeText={setSearchText}
