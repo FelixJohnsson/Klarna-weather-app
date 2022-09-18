@@ -5,6 +5,7 @@ import Modal from 'react-native-modal'
 import { styles } from './styles'
 
 import getData from './data'
+import { colors } from './Colors'
 
 export default function App() {
 	const [isModalVisible, setModalVisible] = useState(false)
@@ -16,30 +17,36 @@ export default function App() {
 	const toggleModal = () => setModalVisible(!isModalVisible)
 	const handleCachedLocations = (newLocationData) => setData([...data, newLocationData])
 
+	const handleSuccess = (data, cached = false) => {
+		setModalContentData(data)
+		if(!cached) handleCachedLocations(data)
+		toggleModal()
+		setSearchText('')
+		setLoading(false)
+	}
+
+	const handleError = (error) => {
+		setSearchText(error.message)
+		setTimeout(() => {
+			setSearchText('')
+		}, 1000)
+		setLoading(false)
+	}
+
 	const handleSearch = (location) => {
 		const found = data.filter(item => item.address === location)
+
 		if (found.length > 0){
 			const {currentConditions, address, description} = found[0]
-			setModalContentData({currentConditions, address, description})
-			toggleModal()
-			setLoading(false)
-			return found[0]
+			handleSuccess({currentConditions, address, description}, true)
+			return
 		}
 		getData(location)
 			.then(({ currentConditions, address, description }) => {
-				// SHORTEN THIS
-				setModalContentData({currentConditions, address, description})
-				handleCachedLocations({currentConditions, address, description})
-				toggleModal()
-				setLoading(false)
-				setSearchText('')
+				handleSuccess({ currentConditions, address, description }, false)
 			})
 			.catch((error) => {
-				setSearchText(error.message)
-				setTimeout(() => {
-					setSearchText('')
-				}, 1000)
-				setLoading(false)
+				handleError(error)
 			})
 	}
 
@@ -76,14 +83,14 @@ export default function App() {
 		)
 	}
 
-	const WeatherCard = (item) => {
-		const { data } = item
+	const WeatherCard = (object) => {
+		const { data } = object
 		return (
 			<View style={[styles.item]}>
 				<Pressable
 					onPress={() => {
 						setLoading(true)
-						handleSearch(item.address)
+						handleSearch(data.address)
 					}}
 				> 
 					<View style={styles.card.view}>
@@ -109,14 +116,17 @@ export default function App() {
 					handleSearch(searchText)
 				}}
 			/>
-			{ isLoading && <ActivityIndicator size="large" color="#0000ff" /> }
+			{ isLoading && <ActivityIndicator size="large" color={colors.black} /> }
 
 			<FlatList
 				data={data}
-				keyExtractor={( item ) => item.address}
+				keyExtractor={(item) => item.address}
 				renderItem={({ item }) => <WeatherCard data={item} />}
 				contentContainerStyle={{ padding: 20 }}
 				showsVerticalScrollIndicator={false}
+				ListEmptyComponent={
+					<Text style={styles.empty}>Please add a location above</Text>
+				}
 			/>
 
 			<Modal

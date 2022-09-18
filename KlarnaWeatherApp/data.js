@@ -1,5 +1,5 @@
 const getData = async (location) => {
-	return fetch(`https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${location}?unitGroup=metric&key=46EWUPFNKY965SXNMTJUUXWQV&contentType=json`)
+	return fetch(`https://weather.visualcrossing.com/VisualCrossingWebServices/rest/services/timeline/${location.trim()}?unitGroup=metric&key=46EWUPFNKY965SXNMTJUUXWQV&contentType=json`)
 		.then((response) => {
 			if(response.ok)
 				return response.json()
