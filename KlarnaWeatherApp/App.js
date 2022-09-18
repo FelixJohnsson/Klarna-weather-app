@@ -99,7 +99,6 @@ export default function App() {
 					<View style={[styles.item]}>
 						<TouchableOpacity
 							onPress={() => {
-								// SHOULD CACHE DATA
 								setLoading(true)
 								handleSearch(item.name) 
 							}}
