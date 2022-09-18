@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { FlatList, StyleSheet, Text, View, Dimensions, TouchableOpacity, TextInput } from 'react-native'
+import { FlatList, StyleSheet, Text, View, Dimensions, TouchableOpacity, TextInput, ActivityIndicator } from 'react-native'
 
 import Modal from 'react-native-modal'
 import { colors } from './Colors'
@@ -41,25 +41,39 @@ export default function App() {
 	const [isModalVisible, setModalVisible] = useState(false)
 	const [modalContentData, setModalContentData] = useState({})
 	const [searchText, setSearchText] = useState('')
+	const [isLoading, setLoading] = useState(false)
 
-	const handleSearch = () => {
-		getData(searchText)
-			.then((data) => {
-				setModalContentData(data)
+	const handleSearch = (location) => {
+		getData(location)
+			.then(({ currentConditions, address, description }) => {
+				setModalContentData({currentConditions, address, description})
 				setModalVisible(true)
+				setLoading(false)
 			})
 			.catch((error) => {
 				console.log(error)
+				setLoading(false)
 			})
 	}
 
 	const toggleModal = () => {
 		setModalVisible(!isModalVisible)
 	}
+
 	const ModalContent = () => {
 		return (
-			<View style={styles.modalContent}>
-				<Text style={styles.modalText}>{modalContentData.name}</Text>
+			<View style={styles.modalContent.view}>
+				<Text style={styles.modalContent.title}>{modalContentData.address}</Text>
+				<Text style={styles.modalContent.text}>{modalContentData.currentConditions.temp}°C</Text>
+				<Text style={styles.modalContent.text}>{modalContentData.currentConditions.conditions}</Text>
+				<Text style={styles.modalContent.text}>Humidity {modalContentData.currentConditions.humidity}%</Text>
+				<Text style={styles.modalContent.text}>Winddir {modalContentData.currentConditions.winddir}</Text>
+				<Text style={styles.modalContent.text}>Windspeed {modalContentData.currentConditions.windspeed}mph</Text>
+
+				<Text style={styles.modalContent.text}>Sunrise at {modalContentData.currentConditions.sunrise}</Text>
+				<Text style={styles.modalContent.sunset}>Sunset at {modalContentData.currentConditions.sunset}</Text>
+
+				<Text style={styles.modalContent.description}> {modalContentData.description}</Text>
 			</View>
 		)
 	}
@@ -72,17 +86,22 @@ export default function App() {
 				value={searchText}
 				placeholder="Location"
 				keyboardType="string"
-				onPressOut={handleSearch}
+				onSubmitEditing={() => {
+					setLoading(true)
+					handleSearch(searchText)
+				}}
 			/>
+			{ isLoading && <ActivityIndicator size="large" color="#0000ff" /> }
 			<FlatList
 				data={[ ...weatherData]}
 				keyExtractor={( item ) => item.id}
 				renderItem={({ item }) => ( 
-					<View style={[styles.item, /*{ borderWidth:1 /calculateTempColor(item.temp)}*/]}>
+					<View style={[styles.item]}>
 						<TouchableOpacity
 							onPress={() => {
-								setModalContentData(item)
-								toggleModal()
+								// SHOULD CACHE DATA
+								setLoading(true)
+								handleSearch(item.name) 
 							}}
 						> 
 							<Text style={styles.name}>{item.name}</Text>
@@ -96,8 +115,8 @@ export default function App() {
 			<Modal
 				isVisible={isModalVisible}
 				useNativeDriver
-				animationIn="zoomInDown"
-				animationOut="zoomOutUp"
+				animationIn="slideInUp"
+				animationOut="slideOutDown"
 				animationInTiming={600}
 				animationOutTiming={600}
 				style={styles.modal}
@@ -164,12 +183,37 @@ const styles = StyleSheet.create({
 		width: Dimensions.get('window').width,
 	},
 	modalContent: {
-		alignItems: 'center',
-		backgroundColor: 'white',
-		borderRadius: 4,
-		width: Dimensions.get('window').width,
-		height: Dimensions.get('window').height/2,
-		padding: 22,
+		view: {
+			alignItems: 'center',
+			backgroundColor: 'white',
+			borderRadius: 4,
+			width: Dimensions.get('window').width,
+			height: 300,
+			padding: 22,
+		},
+		text: {
+			fontSize: 14,
+			textAlign: 'center',
+		},
+		title: {
+			fontSize: 20,
+			fontWeight: 'bold',
+			color: colors.black,
+		},
+		temp: {
+			fontSize: 16,
+			textAlign: 'center',
+		},
+		sunset: {
+			paddingBottom: 20,
+		},
+		description: {
+			paddingTop: 20,
+			fontSize: 12,
+			textAlign: 'center',
+			borderTopColor: colors.black,
+			borderTopWidth: 1,
+		}
 	},
 })
 
