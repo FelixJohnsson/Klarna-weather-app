@@ -1,7 +1,9 @@
 import React, { useState } from 'react'
-import { FlatList, StyleSheet, Text, View, Dimensions, TouchableOpacity } from 'react-native'
+import { FlatList, StyleSheet, Text, View, Dimensions, TouchableOpacity, TextInput } from 'react-native'
 
 import Modal from 'react-native-modal'
+import { colors } from './Colors'
+import getData from './data'
 
 const weatherData = [
 	{ id: '1', name: 'Stockholm', temp: '10' },
@@ -25,18 +27,7 @@ const weatherData = [
 	{ id: '10', name: 'Beijing', temp: '45' },
 ]
 
-const colors = {
-	hot: '#FF6347',
-	warm: '#FFA500',
-	cold: '#00BFFF',
-
-	black: '#000000',
-	white: '#FFFFFF', 
-}
-
-
-
-const calculateTempColor = (temp) => {
+/*const calculateTempColor = (temp) => {
 	if (temp > 30) {
 		return colors.hot
 	} else if (temp > 15) {
@@ -44,14 +35,24 @@ const calculateTempColor = (temp) => {
 	} else {
 		return colors.cold
 	}
-}
-
-
-
+}*/
 
 export default function App() {
 	const [isModalVisible, setModalVisible] = useState(false)
 	const [modalContentData, setModalContentData] = useState({})
+	const [searchText, setSearchText] = useState('')
+
+	const handleSearch = () => {
+		getData(searchText)
+			.then((data) => {
+				setModalContentData(data)
+				setModalVisible(true)
+			})
+			.catch((error) => {
+				console.log(error)
+			})
+	}
+
 	const toggleModal = () => {
 		setModalVisible(!isModalVisible)
 	}
@@ -65,12 +66,19 @@ export default function App() {
 	return (
 
 		<View style={styles.container}>
-			
+			<TextInput
+				style={styles.input}
+				onChangeText={setSearchText}
+				value={searchText}
+				placeholder="Location"
+				keyboardType="string"
+				onPressOut={handleSearch}
+			/>
 			<FlatList
-				data={weatherData}
+				data={[ ...weatherData]}
 				keyExtractor={( item ) => item.id}
 				renderItem={({ item }) => ( 
-					<View style={[styles.item, { borderWidth:1, borderColor: calculateTempColor(item.temp)}]}>
+					<View style={[styles.item, /*{ borderWidth:1 /calculateTempColor(item.temp)}*/]}>
 						<TouchableOpacity
 							onPress={() => {
 								setModalContentData(item)
@@ -138,6 +146,15 @@ const styles = StyleSheet.create({
 	temp: {
 		fontSize: 16,
 		textAlign: 'center',
+	},
+	input: {
+		height: 40,
+		margin: 12,
+		marginTop: 50,
+		padding: 10,
+		borderBottomColor: colors.black,
+		borderBottomWidth: 1,
+		width: Dimensions.get('window').width,
 	},
 	modal: {
 		flex: 1,
